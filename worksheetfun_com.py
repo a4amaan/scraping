@@ -1,4 +1,6 @@
 import os
+import threading
+import time
 from urllib.parse import urlparse
 
 import requests
@@ -29,16 +31,18 @@ def worksheet(link, folder):
         for sheet in sheets:
             link = sheet['href']
             if str(link).endswith('.pdf'):
-                print('downloading', link)
-                r = requests.get(link, headers=headers)
-                url = urlparse(link)
-                filename = os.path.basename(url.path)
-                filepath = f'{folder}/{filename}'
-                outputpath = filename.replace(".pdf", "")
-                # outputpath = f'img/{outputpath}.png'
-                with open(filepath, 'wb') as f:
-                    f.write(r.content)
-                # result = pdf2jpg.convert_pdf2jpg(filepath, 'pdf')
+                try:
+                    r = requests.get(link, headers=headers)
+                    url = urlparse(link)
+                    filename = os.path.basename(url.path)
+                    filepath = f'{folder}/{filename}'
+                    outputpath = filename.replace(".pdf", "")
+                    # outputpath = f'img/{outputpath}.png'
+                    with open(filepath, 'wb') as f:
+                        f.write(r.content)
+                    # result = pdf2jpg.convert_pdf2jpg(filepath, 'pdf')
+                except Exception as e:
+                    print(folder, link)
 
 
 def worksheets(link, folder):
@@ -49,9 +53,13 @@ def worksheets(link, folder):
         for sheet in sheets:
             s = sheet.findNext('a', {'class': 'PinImage'})
             sheet_link = s['href']
-            if not os.path.exists(folder):
-                os.makedirs(folder)
-            worksheet(sheet_link, folder)
+            x = threading.Thread(target=worksheet, args=(sheet_link, folder,))
+            x.start()
+            # try:
+            #     worksheet(sheet_link, folder)
+            # except Exception as e:
+            #     print('retrying', sheet_link)
+            #     worksheet(sheet_link, folder)
     else:
         print(response.status_code)
 
@@ -63,7 +71,12 @@ def categories():
         cats = soup.findAll('li', {'class': 'cat-item'})
         for cat in cats:
             link = cat.findNext('a')
-            worksheets(link['href'], str(link.text).replace(' ', '-').strip())
+            # x = threading.Thread(target=worksheets, args=(link['href'], str(link.text).replace(' ', '-').strip(),))
+            # x.start()
+            folder = str(link.text).replace(' ', '-').strip()
+            if not os.path.exists(folder):
+                os.makedirs(folder)
+            worksheets(link['href'], folder)
     else:
         print(response.status_code)
 
