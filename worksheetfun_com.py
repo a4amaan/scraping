@@ -9,6 +9,8 @@ from pdf2jpg import pdf2jpg
 import os
 from PyPDF2 import PdfMerger
 
+from utils import insert_one
+
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'
 }
@@ -31,18 +33,24 @@ def worksheet(link, folder):
         for sheet in sheets:
             link = sheet['href']
             if str(link).endswith('.pdf'):
-                try:
-                    r = requests.get(link, headers=headers)
-                    url = urlparse(link)
-                    filename = os.path.basename(url.path)
-                    filepath = f'{folder}/{filename}'
-                    outputpath = filename.replace(".pdf", "")
-                    # outputpath = f'img/{outputpath}.png'
-                    with open(filepath, 'wb') as f:
-                        f.write(r.content)
-                    # result = pdf2jpg.convert_pdf2jpg(filepath, 'pdf')
-                except Exception as e:
-                    print(folder, link)
+                x = insert_one({
+                    'url': link,
+                    'folder': folder,
+                    'status': 'queued',
+                }, 'worksheetfun_com')
+
+                # try:
+                #     r = requests.get(link, headers=headers)
+                #     url = urlparse(link)
+                #     filename = os.path.basename(url.path)
+                #     filepath = f'{folder}/{filename}'
+                #     outputpath = filename.replace(".pdf", "")
+                #     # outputpath = f'img/{outputpath}.png'
+                #     with open(filepath, 'wb') as f:
+                #         f.write(r.content)
+                #     # result = pdf2jpg.convert_pdf2jpg(filepath, 'pdf')
+                # except Exception as e:
+                #     print(folder, link)
 
 
 def worksheets(link, folder):
