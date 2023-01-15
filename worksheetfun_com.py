@@ -21,7 +21,7 @@ def merge():
         merger.write(fout)
 
 
-def worksheet(link):
+def worksheet(link, folder):
     response = requests.get(link, headers=headers)
     if response.status_code == 200:
         soup = BeautifulSoup(response.content, 'html.parser')
@@ -33,22 +33,25 @@ def worksheet(link):
                 r = requests.get(link, headers=headers)
                 url = urlparse(link)
                 filename = os.path.basename(url.path)
-                filepath = f'pdf/{filename}'
+                filepath = f'{folder}/{filename}'
                 outputpath = filename.replace(".pdf", "")
-                outputpath = f'img/{outputpath}.png'
+                # outputpath = f'img/{outputpath}.png'
                 with open(filepath, 'wb') as f:
                     f.write(r.content)
-                result = pdf2jpg.convert_pdf2jpg(filepath, 'pdf')
+                # result = pdf2jpg.convert_pdf2jpg(filepath, 'pdf')
 
 
-def worksheets(link):
+def worksheets(link, folder):
     response = requests.get(link, headers=headers)
     if response.status_code == 200:
         soup = BeautifulSoup(response.content, 'html.parser')
         sheets = soup.findAll('div', {'class': 'pin'})
         for sheet in sheets:
-            sheet_link = sheet.findNext('a', {'class': 'PinImage'})['href']
-            worksheet(sheet_link)
+            s = sheet.findNext('a', {'class': 'PinImage'})
+            sheet_link = s['href']
+            if not os.path.exists(folder):
+                os.makedirs(folder)
+            worksheet(sheet_link, folder)
     else:
         print(response.status_code)
 
@@ -59,14 +62,14 @@ def categories():
         soup = BeautifulSoup(response.content, 'html.parser')
         cats = soup.findAll('li', {'class': 'cat-item'})
         for cat in cats:
-            link = cat.findNext('a')['href']
-            print(link)
+            link = cat.findNext('a')
+            worksheets(link['href'], str(link.text).replace(' ', '-').strip())
     else:
         print(response.status_code)
 
 
 if __name__ == '__main__':
-    # categories()
+    categories()
     # worksheets('https://www.worksheetfun.com/category/math-worksheetfunmenu/addition/addition-2-digit/')
     # worksheet('https://www.worksheetfun.com/2016/02/26/10-more-10-less-1-more-1-less-four-worksheets/')
-    merge()
+    # merge()
