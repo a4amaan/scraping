@@ -9,11 +9,29 @@ from pdf2jpg import pdf2jpg
 import os
 from PyPDF2 import PdfMerger
 
-from utils import insert_one
+from utils import insert_one, database
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'
 }
+
+
+def download():
+    collection = database['worksheetfun_com']
+    sheets = list(collection.find({"status": {"$nin": ["processed"]}}))
+    for sheet in sheets:
+        link = sheet['url']
+        folder = sheet['folder']
+        try:
+            r = requests.get(link, headers=headers)
+            url = urlparse(link)
+            filename = os.path.basename(url.path)
+            filepath = f'{folder}/{filename}'
+            with open(filepath, 'wb') as f:
+                f.write(r.content)
+            collection.find_one_and_update({"_id": sheet['_id']}, {"$set": {'status': 'processed'}})
+        except Exception as e:
+            print(e)
 
 
 def merge():
@@ -90,7 +108,7 @@ def categories():
 
 
 if __name__ == '__main__':
-    categories()
+    download()
     # worksheets('https://www.worksheetfun.com/category/math-worksheetfunmenu/addition/addition-2-digit/')
     # worksheet('https://www.worksheetfun.com/2016/02/26/10-more-10-less-1-more-1-less-four-worksheets/')
     # merge()
