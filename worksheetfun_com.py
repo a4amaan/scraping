@@ -1,19 +1,37 @@
+import glob
 import os
 import threading
-import time
 from urllib.parse import urlparse
 
 import requests
+from PyPDF2 import PdfMerger
 from bs4 import BeautifulSoup
 from pdf2jpg import pdf2jpg
-import os
-from PyPDF2 import PdfMerger
-
+from pdf2image import convert_from_path
 from utils import insert_one, database
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'
 }
+
+
+def pdf_to_images():
+    all_files = []
+    for dirpath, dirnames, filenames in os.walk("."):
+        for filename in [f for f in filenames if f.endswith(".pdf")]:
+            all_files.append(
+                {
+                    'file': filename,
+                    'dir': dirpath,
+                }
+            )
+
+    for file in all_files:
+        file = f"{file['dir']}\\{file['file']}"
+        print(file)
+        images = convert_from_path(file, poppler_path=r'D:\poppler-0.68.0\bin')
+        for image in images:
+            image.save(file.replace('.pdf', '.png'), 'png')
 
 
 def download():
@@ -26,6 +44,7 @@ def download():
             r = requests.get(link, headers=headers)
             url = urlparse(link)
             filename = os.path.basename(url.path)
+            filename.replace('/', '')
             filepath = f'{folder}/{filename}'
             with open(filepath, 'wb') as f:
                 f.write(r.content)
@@ -108,7 +127,8 @@ def categories():
 
 
 if __name__ == '__main__':
-    download()
+    pdf_to_images()
+    # download()
     # worksheets('https://www.worksheetfun.com/category/math-worksheetfunmenu/addition/addition-2-digit/')
     # worksheet('https://www.worksheetfun.com/2016/02/26/10-more-10-less-1-more-1-less-four-worksheets/')
     # merge()
