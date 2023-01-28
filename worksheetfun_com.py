@@ -34,6 +34,22 @@ def pdf_to_images():
             image.save(file.replace('.pdf', '.png'), 'png')
 
 
+def merge_pdfs():
+    data = {}
+    for dirpath, dirnames, filenames in os.walk("."):
+        files = []
+        for filename in [f for f in filenames if f.endswith(".pdf")]:
+            files.append(filename)
+        if len(files) > 0:
+            data[dirpath] = files
+    for key in data.keys():
+        merger = PdfMerger()
+        for file in data[key]:
+            merger.append(f"{key}\\{file}")
+        merger.write(f"{key}\\result.pdf")
+        merger.close()
+
+
 def download():
     collection = database['worksheetfun_com']
     sheets = list(collection.find({"status": {"$nin": ["processed"]}}))
@@ -127,7 +143,8 @@ def categories():
 
 
 if __name__ == '__main__':
-    pdf_to_images()
+    merge_pdfs()
+    # pdf_to_images()
     # download()
     # worksheets('https://www.worksheetfun.com/category/math-worksheetfunmenu/addition/addition-2-digit/')
     # worksheet('https://www.worksheetfun.com/2016/02/26/10-more-10-less-1-more-1-less-four-worksheets/')
