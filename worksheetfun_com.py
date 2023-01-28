@@ -43,11 +43,14 @@ def merge_pdfs():
         if len(files) > 0:
             data[dirpath] = files
     for key in data.keys():
-        merger = PdfMerger()
-        for file in data[key]:
-            merger.append(f"{key}\\{file}")
-        merger.write(f"{key}\\result.pdf")
-        merger.close()
+        try:
+            merger = PdfMerger()
+            for file in data[key]:
+                merger.append(f"{key}\\{file}")
+            merger.write(f"{key}\\result.pdf")
+            merger.close()
+        except Exception as e:
+            print(key)
 
 
 def download():
